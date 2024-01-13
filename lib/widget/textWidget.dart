@@ -25,7 +25,7 @@ class MyText extends StatelessWidget {
         minFontSize: 2,
         maxLines: maxLines,
         textDirection: TextDirection.rtl,
-        textAlign: isTextCenterd ? TextAlign.center : TextAlign.right,
+        textAlign: isTextCenterd ? TextAlign.center : TextAlign.left,
         style: TextStyle(
           
             color: color,

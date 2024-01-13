@@ -12,9 +12,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Demo',
+      title: 'TDX',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: "Oswald"
         
       ),
       home: const MainPage(),
