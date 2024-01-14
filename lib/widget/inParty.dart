@@ -1,7 +1,4 @@
 //import 'package:day2/Apis/sokets.dart';
-import 'dart:ffi';
-
-import 'package:day2/Apis/authstuf.dart';
 import 'package:day2/const/MyColors.dart';
 import 'package:day2/const/utlis.dart';
 import 'package:day2/widget/msgWidget.dart';
@@ -27,7 +24,8 @@ class _partyState extends State<party> {
   String vdeoUrl = "";
   final ValueNotifier<String> newMsg = ValueNotifier<String>("");
 
-  VideoPlayerController v = VideoPlayerController.networkUrl(Uri.parse(""));
+  VideoPlayerController v = VideoPlayerController.networkUrl(Uri.parse(
+      "http://104.248.128.150:9000/streamingapi/videos/1/BsLyMHYU9Xw6IJbZQhIzjwbKhDaoaEPwBnljb18t.mp4"));
   @override
   void initState() {
     super.initState();
@@ -36,7 +34,7 @@ class _partyState extends State<party> {
         videoPlayerController: VideoPlayerController.networkUrl(Uri.parse("")));
   }
 
-  List msgs = [];
+  List<Map<String, String>> msgs = [];
   @override
   void dispose() {
     print(sockets);
@@ -83,6 +81,7 @@ class _partyState extends State<party> {
                 ),
               ),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
                     padding: EdgeInsets.all(10),
@@ -106,7 +105,8 @@ class _partyState extends State<party> {
                           ),
                           Container(
                             child: MyText(
-                              text: "200",
+                              text:
+                                  widget.partydata["memberCounter"].toString(),
                               color: Colors.white,
                               textSize: 17,
                               maxLines: 1,
@@ -118,7 +118,10 @@ class _partyState extends State<party> {
                           const Icon(
                             Icons.people_rounded,
                             color: Colors.white,
-                          )
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
                         ],
                       ))
                 ],
@@ -234,7 +237,7 @@ class _partyState extends State<party> {
             .setExtraHeaders({'authorization': token})
             .build(),
       );
-
+      print("______________________________");
       socket.onConnect((_) {
         sockets.clear();
         sockets.add(socket);
@@ -271,15 +274,17 @@ class _partyState extends State<party> {
         final l = data["videoUrl"];
         print(data);
 
-        flickManager
-            .handleChangeVideo(VideoPlayerController.networkUrl(Uri.parse(l)));
+        if (l != null) {
+          flickManager.handleChangeVideo(
+              VideoPlayerController.networkUrl(Uri.parse(l??"http://104.248.128.150:9000/streamingapi/videos/1/BsLyMHYU9Xw6IJbZQhIzjwbKhDaoaEPwBnljb18t.mp4")));
+        }
       });
 
       socket.on("video-set-receive", ((data) {
         print(data["videoUrl"]);
         final l = data["videoUrl"];
         flickManager
-            .handleChangeVideo(VideoPlayerController.networkUrl(Uri.parse(l)));
+            .handleChangeVideo(VideoPlayerController.networkUrl(Uri.parse(l??"http://104.248.128.150:9000/streamingapi/videos/1/BsLyMHYU9Xw6IJbZQhIzjwbKhDaoaEPwBnljb18t.mp4")));
         print("HEREEEE");
         // flickManager.handleChangeVideo( VideoPlayerController.networkUrl(data["videoUrl"]));
 
@@ -290,10 +295,8 @@ class _partyState extends State<party> {
         (data) {
           print("Message Received: $data");
           {
-            setState(() {
-              sendMsg(
-                  {"text": data["message"], "url": data["user"]["avatar_url"]});
-            });
+            setmsg(
+                {"text": data["message"], "url": data["user"]["avatar_url"]});
           }
           // Handle message data and update state accordingly
         },
@@ -306,7 +309,11 @@ class _partyState extends State<party> {
 
   void setmsg(var m) {
     setState(() {
-      msgs.add(m);
+      msgs.add(m ??
+          {
+            "text": "Test",
+            "url": "https://cdn-icons-png.flaticon.com/512/7626/7626666.png"
+          });
     });
   }
 

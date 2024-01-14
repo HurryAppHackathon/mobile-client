@@ -43,7 +43,7 @@ class _exploreState extends State<explore> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => party(partydata:data["data"][index] ),
+                                builder: (context) =>party(partydata:data["data"][index] ),
                               ));
                         },
                         child: Container(
@@ -123,7 +123,7 @@ class _exploreState extends State<explore> {
                                           width: 5,
                                         ),
                                         MyText(
-                                          text: "20",
+                                          text:  data["data"][index]["memberCounter"].toString()??"12",
                                           color: Colors.white,
                                           textSize: 20,
                                           maxLines: 2,
