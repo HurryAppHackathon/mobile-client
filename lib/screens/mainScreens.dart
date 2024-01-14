@@ -57,7 +57,7 @@ class _MainPageState extends State<MainPage> {
                 appBar: AppBar(
                     backgroundColor: c2,
                     title:
-                        MyText(text: "itchat", color: Colors.white, textSize: 20),
+                        MyText(text: "TDV", color: Colors.white, textSize: 20),
                     centerTitle: true),
                 body: pages[_selectedIndex],
                 bottomNavigationBar: BottomNavigationBar(

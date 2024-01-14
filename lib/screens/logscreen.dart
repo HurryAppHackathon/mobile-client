@@ -25,7 +25,7 @@ class _loginScreenState extends State<loginScreen> {
       backgroundColor: c1,
       appBar: AppBar(
         backgroundColor: c2,
-        title: MyText(text: "itchat", color: Colors.white, textSize: 20),
+        title: MyText(text: "TDV", color: Colors.white, textSize: 20),
         centerTitle: true,
       ),
       body: Center(
