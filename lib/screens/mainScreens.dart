@@ -1,5 +1,6 @@
 import 'package:day2/Apis/authstuf.dart';
 import 'package:day2/const/MyColors.dart';
+import 'package:day2/screens/accontPage.dart';
 import 'package:day2/screens/logscreen.dart';
 import 'package:day2/screens/makeParty.dart';
 import 'package:day2/screens/uploadVideoScreen.dart';
@@ -21,7 +22,7 @@ class _MainPageState extends State<MainPage> {
   List pages = [
     const MyVideos(),
     const explore(),
-    const MyVideos(),
+    const AccontPage(),
   ];
   bool checkIFloged = false;
   Future log() async {
@@ -32,7 +33,6 @@ class _MainPageState extends State<MainPage> {
       }
       checkIFloged = true;
     });
-   
   }
 
   @override
@@ -50,7 +50,7 @@ class _MainPageState extends State<MainPage> {
               ),
             ),
           )
-        : checkIFloged&&usarData == null
+        : checkIFloged && usarData == null
             ? loginScreen()
             : Scaffold(
                 backgroundColor: c3,
@@ -60,31 +60,36 @@ class _MainPageState extends State<MainPage> {
                         MyText(text: "TDV", color: Colors.white, textSize: 20),
                     centerTitle: true),
                 body: pages[_selectedIndex],
-                bottomNavigationBar: BottomNavigationBar(
-                  backgroundColor: c2,
-                  items: const <BottomNavigationBarItem>[
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.home),
-                      label: 'Home',
+                bottomNavigationBar: Theme(
+                    data: ThemeData(
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
                     ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.explore),
-                      label: 'explore',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.account_circle),
-                      label: 'Account',
-                    ),
-                  ],
-                  currentIndex: _selectedIndex,
-                  selectedItemColor: c5,
-                  unselectedItemColor: c6,
-                  onTap: (value) {
-                    setState(() {
-                      _selectedIndex = value;
-                    });
-                  },
-                ),
+                    child: BottomNavigationBar(
+                      backgroundColor: c2,
+                      items: const <BottomNavigationBarItem>[
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.home),
+                          label: 'Home',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.explore),
+                          label: 'explore',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.account_circle),
+                          label: 'Account',
+                        ),
+                      ],
+                      currentIndex: _selectedIndex,
+                      selectedItemColor: c5,
+                      unselectedItemColor: c6,
+                      onTap: (value) {
+                        setState(() {
+                          _selectedIndex = value;
+                        });
+                      },
+                    )),
                 floatingActionButton: _selectedIndex < 2
                     ? InkWell(
                         onTap: () {
