@@ -5,9 +5,8 @@ import 'package:day2/Apis/setImageProf.dart';
 import 'package:day2/const/MyColors.dart';
 import 'package:day2/widget/textWidget.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+
 
 class AccontPage extends StatefulWidget {
   const AccontPage({super.key});
