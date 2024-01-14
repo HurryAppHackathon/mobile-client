@@ -238,11 +238,7 @@ class _partyState extends State<party> {
       socket.onConnect((_) {
         sockets.clear();
         sockets.add(socket);
-        print("__________________________________________");
-        print(sockets);
-        print("__________________________________________");
-        print(
-            "Socket Connected>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
         socket.emit('join-party', {"partyId": id});
       });
 
@@ -279,8 +275,6 @@ class _partyState extends State<party> {
             .handleChangeVideo(VideoPlayerController.networkUrl(Uri.parse(l)));
       });
 
-      
-
       socket.on("video-set-receive", ((data) {
         print(data["videoUrl"]);
         final l = data["videoUrl"];
@@ -308,7 +302,6 @@ class _partyState extends State<party> {
       print("Error connecting to socket: $e");
       // Handle the error appropriately
     }
-    
   }
 
   void setmsg(var m) {
