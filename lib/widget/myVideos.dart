@@ -23,7 +23,7 @@ class _MyVideosState extends State<MyVideos> {
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             data = jsonDecode(snapshot.data);
-            print(data["data"][0]["thumbnail_url"]);
+            
           }
           return snapshot.hasData==false
               ? Container()

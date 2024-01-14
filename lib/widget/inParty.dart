@@ -1,4 +1,9 @@
 //import 'package:day2/Apis/sokets.dart';
+import 'dart:convert';
+import 'dart:ffi';
+
+import 'package:day2/Apis/authstuf.dart';
+import 'package:day2/Apis/getListOfVideos.dart';
 import 'package:day2/const/MyColors.dart';
 import 'package:day2/const/utlis.dart';
 import 'package:day2/widget/msgWidget.dart';
@@ -19,34 +24,52 @@ class party extends StatefulWidget {
 }
 
 class _partyState extends State<party> {
-  String vdeoUrl =
-      "http://172.20.10.6:9000/streamingapi/videos/1/in2UPgdta9kgPuIHeYoieXQBWwkax5GoAzn6wIBl.mp4";
-  String newMsg = "";
   late FlickManager flickManager;
+  List<IO.Socket> sockets = [];
+  String vdeoUrl = "";
+  final ValueNotifier<String> newMsg = ValueNotifier<String>("");
+
+  VideoPlayerController v = VideoPlayerController.networkUrl(Uri.parse(""));
   @override
   void initState() {
     super.initState();
-    connectToSocket(widget.partydata["id"]);
+
     flickManager = FlickManager(
-      videoPlayerController:
-          VideoPlayerController.networkUrl(Uri.parse(vdeoUrl)),
-    );
+        videoPlayerController: VideoPlayerController.networkUrl(Uri.parse("")));
+    connectToSocket(widget.partydata["id"]);
   }
 
   List msgs = [];
   @override
   void dispose() {
+    for (IO.Socket socket in sockets) {
+      socket.disconnect();
+      socket.close();
+     
+    }
+    sockets.clear();
     flickManager.dispose();
     super.dispose();
   }
 
   TextEditingController comment = TextEditingController();
-
+  double sliderValue = 0.0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: c3,
       appBar: AppBar(
+          actions: [
+            IconButton(
+                onPressed: () {
+                  setVideo(widget.partydata["id"]);
+                },
+                icon: Icon(
+                  Icons.video_collection_sharp,
+                  color: c5,
+                  size: 30,
+                ))
+          ],
           backgroundColor: c2,
           title: MyText(
               text: widget.partydata["name"],
@@ -63,8 +86,14 @@ class _partyState extends State<party> {
             children: [
               Container(
                 height: 250,
+                color: Colors.amber,
                 child: FlickVideoPlayer(
                   flickManager: flickManager,
+                  flickVideoWithControls: FlickVideoWithControls(
+                    controls:
+                        FlickSeekVideoAction(duration: Duration(seconds: 2)),
+                    videoFit: BoxFit.fill,
+                  ),
                 ),
               ),
               Row(
@@ -180,8 +209,9 @@ class _partyState extends State<party> {
                   margin: EdgeInsets.only(bottom: 10),
                   child: InkWell(
                     onTap: () {
+                      sendMsg(comment.text);
                       setState(() {
-                        newMsg = comment.text;
+                        comment.text = "";
                       });
                     },
                     child: Container(
@@ -204,65 +234,162 @@ class _partyState extends State<party> {
     );
   }
 
-  Future connectToSocket(int id) async {
-    // Dart client
+  Future<void> connectToSocket(int id) async {
     final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("TOKEN") ?? "";
 
-    final token = await prefs.getString("TOKEN") ?? "";
-    print(
-        "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     IO.Socket socket = IO.io(
-        'http://172.20.10.6:3000',
-        OptionBuilder()
-            .setTransports(['websocket']) // for Flutter or Dart VM
-            .disableAutoConnect() // disable auto-connection
-            .setExtraHeaders({'authorization': token}) // optional
-            .build());
-    socket.connect();
-    print(
-        "p<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+      'http://104.248.128.150:3000',
+      OptionBuilder()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
+          .setExtraHeaders({'authorization': token})
+          .build(),
+    );
+  
+    
+    
     socket.onConnect((_) {
-      print("DDDDDDDDDDDDDDDDD CCCCCCCCCCCCCCCCCCCCC    TTTTTTTTTTTTTTTTTTTTT");
-      socket.emit('join-party', {"partyId": "1"});
-      socket.emit('video-manage-send',
-          {"partyId": "1", "action": 'set_video', "videoId": "1"});
-      socket.emit('video-manage-send',
-          {"partyId": "1", "action": 'set_video', "videoId": "1"});
-      if (newMsg.isNotEmpty) {
-        socket.emit('message-send', {"partyId": "1", "message": newMsg});
-        print(newMsg);
-        setState(() {
-          newMsg = "";
-        });
-      }
+      sockets.add(socket);
+      socket.emit('join-party', {"partyId": id});
     });
 
-    //socket.on('user', (data) => print(data));
-    //socket.on("exception", (data) => print(data));
-    socket.on("party-joined", (data) => print(data));
+    socket.onConnectError((data) {
+      print("Connection Error: $data");
+    });
+
+    socket.onConnectTimeout((data) {
+      print("Connection Timeout: $data");
+    });
+
+    
+
+    socket.on('user', (data) => print("User: $data"));
+    socket.on("exception", (data) => print("Exception: $data"));
+    socket.on("video-pause-receive", (data) {
+      flickManager.flickControlManager?.pause();
+    });
+    socket.on("video-resume-receive", (data) {
+      flickManager.flickControlManager?.play();
+    });
+    socket.on("video-seek-receive", (data) {
+      double millis = double.parse(data["time"].toString());
+
+      flickManager.flickControlManager
+          ?.seekTo(Duration(milliseconds: (millis * 1000).toInt()));
+    });
+
+    socket.on("party-joined", (data) {
+      final l = data["videoUrl"];
+      flickManager
+          .handleChangeVideo(VideoPlayerController.networkUrl(Uri.parse(l)));
+      print(data["messages"]);
+      setState(() {
+        for (var i = 0; i < data["messages"].length; i++) {
+          msgs.add(data["messages"][i]["message"]);
+        }
+      });
+    });
+
     socket.on(
       "message-receive",
       (data) {
-        setState(() {
-          msgs.add(
-              {"text": data["message"], "url": data["user"]["avatar_url"]});
-        });
+        print("Message Received: $data");
+        {
+          setState(() {
+            msgs.add(
+                {"text": data["message"], "url": data["user"]["avatar_url"]});
+          });
+        }
+        // Handle message data and update state accordingly
       },
     );
+
     socket.on("video-set-receive", ((data) {
-      print(
-          "ITS HERE>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-      print(data);
-      if (vdeoUrl != data[vdeoUrl]) {
-        vdeoUrl = data["videoUrl"];
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute<void>(
-            builder: (BuildContext context) =>
-                party(partydata: widget.partydata, vu: vdeoUrl),
-          ),
-        );
-      }
+      print(data["videoUrl"]);
+      final l = data["videoUrl"];
+      flickManager
+          .handleChangeVideo(VideoPlayerController.networkUrl(Uri.parse(l)));
+      print("HEREEEE");
+      // flickManager.handleChangeVideo( VideoPlayerController.networkUrl(data["videoUrl"]));
+
+      // Handle video set data and update state accordingly
     }));
+  }
+
+  Future sendMsg(msg) async {
+    final socket = sockets[0];
+    print(sockets);
+    socket.connect;
+    print("MSG>>>>>>>>>>>>>>>>>>>>>>>>>..");
+
+    socket.emit(
+        'message-send', {"partyId": widget.partydata["id"], "message": msg});
+  }
+
+  Future<void> sendVideoSeek(Duration duration) async {
+    final socket = sockets[0];
+    print(sockets);
+    socket.connect;
+    print("Seeking to: $duration");
+
+    socket.emit('video-manage-send', {
+      "partyId": widget.partydata["id"],
+      "action": 'seek',
+      "time": duration.inMilliseconds,
+    });
+  }
+
+  void setVideo(int id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Center(
+              child: Text("Set video",
+                  style: TextStyle(color: Colors.white, fontSize: 20))),
+          backgroundColor: c2,
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          content: Container(
+            height: 300,
+            child: Expanded(
+              child: FutureBuilder(
+                future: getListOFVideos(),
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container(
+                        height: 30,
+                        width: 30,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ));
+                  }
+                  final data = jsonDecode(snapshot.data)["data"];
+                  print(data);
+                  return ListView.builder(
+                    itemCount: data.length,
+                    itemBuilder: (context, index) {
+                      return Container(color: c1, child: ListTile());
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {},
+                child: const Text("Set",
+                    style: TextStyle(color: Colors.white, fontSize: 16))),
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text("quit",
+                    style: TextStyle(color: Colors.white, fontSize: 16)))
+          ],
+        );
+      },
+    );
   }
 }

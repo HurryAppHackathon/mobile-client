@@ -15,7 +15,7 @@ Future loginwithToken() async {
     Uri.parse("$url/api/v1/auth/@me"),
     headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
   );
-
+  print(token);
   if (response.statusCode == 200) {
     return response.body;
   } else {
@@ -57,10 +57,11 @@ Future register(String username, String password, String email, String fName,
     final prefs = await SharedPreferences.getInstance();
 
     final token = jsonDecode(response.body)["data"]["token"];
-
+    
     await prefs.setString("TOKEN", token);
     return true;
   } else {
+    
     return response.body;
   }
 }

@@ -12,8 +12,12 @@ Future getListOFVideos() async {
   final token = await prefs.getString("TOKEN") ?? "";
 
   final response = await http.get(
-    Uri.parse("$url/api/v1/videos?type="),
-    headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
+    Uri.parse("$url/api/v1/videos?type=own"),
+    headers: {
+      "Accept": "application/json",
+      "Authorization": "Bearer $token",
+      
+    },
   );
 
   if (response.statusCode == 200) {
