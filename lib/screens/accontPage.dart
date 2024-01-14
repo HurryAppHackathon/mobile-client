@@ -1,8 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:day2/Apis/getUser.dart';
+import 'package:day2/Apis/setImageProf.dart';
 import 'package:day2/const/MyColors.dart';
 import 'package:day2/widget/textWidget.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 class AccontPage extends StatefulWidget {
   const AccontPage({super.key});
@@ -13,6 +18,26 @@ class AccontPage extends StatefulWidget {
 
 class _AccontPageState extends State<AccontPage> {
   var userData;
+  File? galleryFile;
+  final picker = ImagePicker();
+  var fimg = null;
+  Future getImage(
+    ImageSource img,
+  ) async {
+    final pickedFile = await picker.pickImage(
+      source: img,
+      preferredCameraDevice: CameraDevice.front,
+    );
+
+    setState(
+      () {
+        galleryFile = File(pickedFile!.path);
+      },
+    );
+    if (await setImage()) {
+      getdata();
+    }
+  }
 
   Future getdata() async {
     userData = await jsonDecode(await getUserData());
@@ -41,7 +66,10 @@ class _AccontPageState extends State<AccontPage> {
                 radius: 50,
                 backgroundColor: c5,
                 child: userData != null
-                    ? Image.network(userData["user"]["avatar_url"])
+                    ? CircleAvatar(
+                      radius: 48,
+                        backgroundImage:
+                            NetworkImage(userData["user"]["avatar_url"]))
                     : Icon(
                         Icons.account_circle,
                         color: c2,
@@ -52,7 +80,9 @@ class _AccontPageState extends State<AccontPage> {
                 height: 20,
               ),
               IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    _showPicker(context: context);
+                  },
                   icon: Icon(
                     Icons.edit,
                     color: Colors.white,
@@ -75,9 +105,45 @@ class _AccontPageState extends State<AccontPage> {
                   text: userData["user"]["email"],
                   color: Colors.white,
                   textSize: 20),
-          
         ],
       ),
     );
+  }
+
+  Future setImage() async {
+    if (galleryFile != null) {
+      UploadImageToserver(galleryFile!);
+    }
+  }
+
+  void _showPicker({
+    required BuildContext context,
+  }) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return SafeArea(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Gallery'),
+                  onTap: () {
+                    getImage(ImageSource.gallery);
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_camera),
+                  title: const Text('Camera'),
+                  onTap: () {
+                    getImage(ImageSource.camera);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          );
+        });
   }
 }
