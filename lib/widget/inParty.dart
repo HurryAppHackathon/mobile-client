@@ -87,7 +87,7 @@ class _partyState extends State<party> {
                     padding: EdgeInsets.all(10),
                     width: Utils(context).screenSize.width * 0.78,
                     child: MyText(
-                      text: "nothin rhit now",
+                      text: "This is the description",
                       color: Colors.grey,
                       textSize: 14,
                       maxLines: 5,
